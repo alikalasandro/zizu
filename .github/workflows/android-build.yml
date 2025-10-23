@@ -1,4 +1,4 @@
-name: Android Build
+name: Android Build (self-contained)
 
 on:
   workflow_dispatch:
@@ -8,10 +8,6 @@ on:
 jobs:
   build:
     runs-on: windows-latest
-    # Eğer projen android/ klasöründeyse bu 4 satırı aç:
-    #defaults:
-    #  run:
-    #    working-directory: .
 
     steps:
       - name: Checkout
@@ -23,21 +19,166 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      # Gradle'ı wrapper olmadan kullan
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v3
+      - name: Create minimal Android project
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force app\src\main\java\com\zizu\app | Out-Null
+          New-Item -ItemType Directory -Force app\src\main\res\layout | Out-Null
+          New-Item -ItemType Directory -Force app\src\main\res\values | Out-Null
+          New-Item -ItemType Directory -Force app\src\main\res\xml | Out-Null
+
+          @'
+          pluginManagement {
+            repositories {
+              gradlePluginPortal()
+              google()
+              mavenCentral()
+            }
+          }
+          dependencyResolutionManagement {
+            repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+            repositories {
+              google()
+              mavenCentral()
+            }
+          }
+          rootProject.name = "Zizu"
+          include(":app")
+          '@ | Set-Content -Encoding UTF8 settings.gradle
+
+          @'
+          plugins {
+            id "com.android.application" version "8.4.2"
+            id "org.jetbrains.kotlin.android" version "1.9.24"
+          }
+
+          android {
+            namespace "com.zizu.app"
+            compileSdk 34
+
+            defaultConfig {
+              applicationId "com.zizu.app"
+              minSdk 24
+              targetSdk 34
+              versionCode 1
+              versionName "1.0"
+            }
+
+            buildTypes {
+              release {
+                minifyEnabled false
+                proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
+              }
+            }
+
+            compileOptions {
+              sourceCompatibility JavaVersion.VERSION_17
+              targetCompatibility JavaVersion.VERSION_17
+            }
+            kotlinOptions {
+              jvmTarget = "17"
+            }
+          }
+
+          dependencies {
+            implementation "androidx.core:core-ktx:1.13.1"
+            implementation "androidx.appcompat:appcompat:1.7.0"
+            implementation "com.google.android.material:material:1.12.0"
+            implementation "androidx.activity:activity-ktx:1.9.2"
+            implementation "androidx.webkit:webkit:1.11.0"
+          }
+          '@ | Set-Content -Encoding UTF8 app\build.gradle
+
+          @'
+          org.gradle.jvmargs=-Xmx2g -Dfile.encoding=UTF-8
+          android.useAndroidX=true
+          kotlin.code.style=official
+          '@ | Set-Content -Encoding UTF8 gradle.properties
+
+          @'
+          <?xml version="1.0" encoding="utf-8"?>
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+              package="com.zizu.app">
+
+              <uses-permission android:name="android.permission.INTERNET"/>
+              <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+
+              <application
+                  android:label="Zizu"
+                  android:icon="@mipmap/ic_launcher"
+                  android:usesCleartextTraffic="true">
+                  <activity android:name=".MainActivity"
+                      android:exported="true">
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN" />
+                          <category android:name="android.intent.category.LAUNCHER" />
+                      </intent-filter>
+                  </activity>
+              </application>
+          </manifest>
+          '@ | Set-Content -Encoding UTF8 app\src\main\AndroidManifest.xml
+
+          @'
+          package com.zizu.app
+
+          import android.annotation.SuppressLint
+          import android.os.Bundle
+          import android.webkit.WebChromeClient
+          import android.webkit.WebSettings
+          import android.webkit.WebView
+          import androidx.activity.ComponentActivity
+
+          class MainActivity : ComponentActivity() {
+              @SuppressLint("SetJavaScriptEnabled")
+              override fun onCreate(savedInstanceState: Bundle?) {
+                  super.onCreate(savedInstanceState)
+                  val web = WebView(this)
+                  setContentView(web)
+                  val ws: WebSettings = web.settings
+                  ws.javaScriptEnabled = true
+                  ws.mediaPlaybackRequiresUserGesture = false
+                  ws.domStorageEnabled = true
+                  web.webChromeClient = WebChromeClient()
+                  // Emülatör için:
+                  web.loadUrl("http://10.0.2.2:8000/")
+                  // Gerçek cihaz/dağıtım için bunu HTTPS alan adınla değiştir:
+                  // web.loadUrl("https://zizu.senin-domainin.com/")
+              }
+          }
+          '@ | Set-Content -Encoding UTF8 app\src\main\java\com\zizu\app\MainActivity.kt
+
+          @'
+          <?xml version="1.0" encoding="utf-8"?>
+          <resources>
+              <string name="app_name">Zizu</string>
+          </resources>
+          '@ | Set-Content -Encoding UTF8 app\src\main\res\values\strings.xml
+
+          @'
+          <?xml version="1.0" encoding="utf-8"?>
+          <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent">
+          </LinearLayout>
+          '@ | Set-Content -Encoding UTF8 app\src\main\res\layout\activity_main.xml
+
+          @'
+          # Keep rules (empty for now)
+          '@ | Set-Content -Encoding UTF8 app\proguard-rules.pro
+
+      - name: Install Gradle wrapper (8.6)
+        shell: pwsh
+        run: |
+          gradle wrapper --gradle-version 8.6
+          Get-ChildItem gradle -Recurse | Write-Output
+          Write-Output "Wrapper created."
 
       - name: Build Debug APK
-        run: gradle assembleDebug
+        shell: pwsh
+        run: .\gradlew.bat assembleDebug
 
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4
         with:
           name: zizu-debug-apk
-          # Proje kökteyse bu yol çalışır; alt klasördeyse başına klasör adını ekle
-          path: app/build/outputs/apk/debug/*.apk
-
-          defaults:
-  run:
-    working-directory: android
-
+          path: app\build\outputs\apk\debug\*.apk
