@@ -36,3 +36,8 @@ jobs:
           name: zizu-debug-apk
           # Proje kökteyse bu yol çalışır; alt klasördeyse başına klasör adını ekle
           path: app/build/outputs/apk/debug/*.apk
+
+          defaults:
+  run:
+    working-directory: android
+
