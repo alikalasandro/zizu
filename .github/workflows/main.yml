@@ -8,6 +8,9 @@ on:
 jobs:
   build:
     runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: android   # <-- ANDROID KLASÖR ADIN
 
     steps:
       - name: Checkout
@@ -19,13 +22,14 @@ jobs:
           distribution: temurin
           java-version: 17
 
+      - name: Grant execute for gradlew
+        run: git update-index --chmod=+x gradlew
+
       - name: Build Debug APK
-        run: |
-          cd app
-          ../gradlew.bat assembleDebug
+        run: .\gradlew.bat assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: zizu-debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: app/build/outputs/apk/debug/*.apk
