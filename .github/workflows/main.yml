@@ -8,6 +8,10 @@ on:
 jobs:
   build:
     runs-on: windows-latest
+    # Eğer projen android/ klasöründeyse bu 4 satırı aç:
+    #defaults:
+    #  run:
+    #    working-directory: .
 
     steps:
       - name: Checkout
@@ -19,12 +23,16 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      # (Windows runner'da .bat ile çağırıyoruz)
+      # Gradle'ı wrapper olmadan kullan
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v3
+
       - name: Build Debug APK
-        run: .\gradlew.bat assembleDebug
+        run: gradle assembleDebug
 
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4
         with:
           name: zizu-debug-apk
-          path: app\build\outputs\apk\debug\app-debug.apk
+          # Proje kökteyse bu yol çalışır; alt klasördeyse başına klasör adını ekle
+          path: app/build/outputs/apk/debug/*.apk
