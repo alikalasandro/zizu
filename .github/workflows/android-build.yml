@@ -22,25 +22,25 @@ jobs:
       - name: Create minimal Android project
         shell: pwsh
         run: |
+          # klasörler
           New-Item -ItemType Directory -Force app\src\main\java\com\zizu\app | Out-Null
           New-Item -ItemType Directory -Force app\src\main\res\layout | Out-Null
           New-Item -ItemType Directory -Force app\src\main\res\values | Out-Null
           New-Item -ItemType Directory -Force app\src\main\res\xml | Out-Null
+          New-Item -ItemType Directory -Force app\src\main\res\mipmap-anydpi-v26 | Out-Null
+          New-Item -ItemType Directory -Force app\src\main\res\mipmap-hdpi | Out-Null
+          New-Item -ItemType Directory -Force app\src\main\res\mipmap-mdpi | Out-Null
+          New-Item -ItemType Directory -Force app\src\main\res\mipmap-xhdpi | Out-Null
+          New-Item -ItemType Directory -Force app\src\main\res\mipmap-xxhdpi | Out-Null
+          New-Item -ItemType Directory -Force app\src\main\res\mipmap-xxxhdpi | Out-Null
 
           @'
           pluginManagement {
-            repositories {
-              gradlePluginPortal()
-              google()
-              mavenCentral()
-            }
+            repositories { gradlePluginPortal(); google(); mavenCentral() }
           }
           dependencyResolutionManagement {
             repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-            repositories {
-              google()
-              mavenCentral()
-            }
+            repositories { google(); mavenCentral() }
           }
           rootProject.name = "Zizu"
           include(":app")
@@ -51,7 +51,6 @@ jobs:
             id "com.android.application" version "8.4.2"
             id "org.jetbrains.kotlin.android" version "1.9.24"
           }
-
           android {
             namespace "com.zizu.app"
             compileSdk 34
@@ -97,24 +96,26 @@ jobs:
 
           @'
           <?xml version="1.0" encoding="utf-8"?>
-          <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-              package="com.zizu.app">
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+            <uses-permission android:name="android.permission.INTERNET"/>
+            <uses-permission android:name="android.permission.RECORD_AUDIO"/>
 
-              <uses-permission android:name="android.permission.INTERNET"/>
-              <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+            <application
+              android:label="Zizu"
+              android:icon="@mipmap/ic_launcher"
+              android:usesCleartextTraffic="true">
 
-              <application
-                  android:label="Zizu"
-                  android:icon="@mipmap/ic_launcher"
-                  android:usesCleartextTraffic="true">
-                  <activity android:name=".MainActivity"
-                      android:exported="true">
-                      <intent-filter>
-                          <action android:name="android.intent.action.MAIN" />
-                          <category android:name="android.intent.category.LAUNCHER" />
-                      </intent-filter>
-                  </activity>
-              </application>
+              <activity
+                android:name=".MainActivity"
+                android:exported="true">
+
+                <intent-filter>
+                  <action android:name="android.intent.action.MAIN"/>
+                  <category android:name="android.intent.category.LAUNCHER"/>
+                </intent-filter>
+
+              </activity>
+            </application>
           </manifest>
           '@ | Set-Content -Encoding UTF8 app\src\main\AndroidManifest.xml
 
@@ -132,17 +133,20 @@ jobs:
               @SuppressLint("SetJavaScriptEnabled")
               override fun onCreate(savedInstanceState: Bundle?) {
                   super.onCreate(savedInstanceState)
+
                   val web = WebView(this)
                   setContentView(web)
+
                   val ws: WebSettings = web.settings
                   ws.javaScriptEnabled = true
                   ws.mediaPlaybackRequiresUserGesture = false
                   ws.domStorageEnabled = true
+
                   web.webChromeClient = WebChromeClient()
-                  // Emülatör için:
-                  web.loadUrl("http://10.0.2.2:8000/")
-                  // Gerçek cihaz/dağıtım için bunu HTTPS alan adınla değiştir:
-                  // web.loadUrl("https://zizu.senin-domainin.com/")
+
+                  // Buraya backend URL'ini koyarsın.
+                  // Şimdilik placeholder bırakalım ki build çıksın:
+                  web.loadUrl("https://example.com/")
               }
           }
           '@ | Set-Content -Encoding UTF8 app\src\main\java\com\zizu\app\MainActivity.kt
@@ -150,7 +154,7 @@ jobs:
           @'
           <?xml version="1.0" encoding="utf-8"?>
           <resources>
-              <string name="app_name">Zizu</string>
+            <string name="app_name">Zizu</string>
           </resources>
           '@ | Set-Content -Encoding UTF8 app\src\main\res\values\strings.xml
 
@@ -158,20 +162,40 @@ jobs:
           <?xml version="1.0" encoding="utf-8"?>
           <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
               android:layout_width="match_parent"
-              android:layout_height="match_parent">
-          </LinearLayout>
+              android:layout_height="match_parent" />
           '@ | Set-Content -Encoding UTF8 app\src\main\res\layout\activity_main.xml
 
-          @'
-          # Keep rules (empty for now)
-          '@ | Set-Content -Encoding UTF8 app\proguard-rules.pro
+          @' # keep rules '@ | Set-Content -Encoding UTF8 app\proguard-rules.pro
 
-      - name: Install Gradle wrapper (8.6)
+          # Basit ikon XML'leri (ic_launcher ve ic_launcher_round)
+          @'
+          <?xml version="1.0" encoding="utf-8"?>
+          <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+              <background android:drawable="@android:color/black"/>
+              <foreground android:drawable="@android:color/white"/>
+          </adaptive-icon>
+          '@ | Set-Content -Encoding UTF8 app\src\main\res\mipmap-anydpi-v26\ic_launcher.xml
+
+          @'
+          <?xml version="1.0" encoding="utf-8"?>
+          <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+              <background android:drawable="@android:color/black"/>
+              <foreground android:drawable="@android:color/white"/>
+          </adaptive-icon>
+          '@ | Set-Content -Encoding UTF8 app\src\main\res\mipmap-anydpi-v26\ic_launcher_round.xml
+
+          # Boş PNG placeholderları (Gradle sadece dosya var mı diye bakıyor, gerçek ikon olmasa da olur)
+          # 1x1 byte'lık minimal PNG'leri base64 olarak yazıyoruz:
+          $pngBase64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII="
+          [IO.File]::WriteAllBytes("app\src\main\res\mipmap-mdpi\ic_launcher.png", [Convert]::FromBase64String($pngBase64))
+          [IO.File]::WriteAllBytes("app\src\main\res\mipmap-hdpi\ic_launcher.png", [Convert]::FromBase64String($pngBase64))
+          [IO.File]::WriteAllBytes("app\src\main\res\mipmap-xhdpi\ic_launcher.png", [Convert]::FromBase64String($pngBase64))
+          [IO.File]::WriteAllBytes("app\src\main\res\mipmap-xxhdpi\ic_launcher.png", [Convert]::FromBase64String($pngBase64))
+          [IO.File]::WriteAllBytes("app\src\main\res\mipmap-xxxhdpi\ic_launcher.png", [Convert]::FromBase64String($pngBase64))
+
+      - name: Install Gradle wrapper
         shell: pwsh
-        run: |
-          gradle wrapper --gradle-version 8.6
-          Get-ChildItem gradle -Recurse | Write-Output
-          Write-Output "Wrapper created."
+        run: gradle wrapper --gradle-version 8.6
 
       - name: Build Debug APK
         shell: pwsh
