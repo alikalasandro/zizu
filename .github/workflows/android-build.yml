@@ -22,14 +22,14 @@ jobs:
       - name: Create minimal Android project
         shell: pwsh
         run: |
-          # klasörler
+          # klasörleri oluştur
           New-Item -ItemType Directory -Force app\src\main\java\com\zizu\app | Out-Null
           New-Item -ItemType Directory -Force app\src\main\res\layout | Out-Null
           New-Item -ItemType Directory -Force app\src\main\res\values | Out-Null
           New-Item -ItemType Directory -Force app\src\main\res\xml | Out-Null
           New-Item -ItemType Directory -Force app\src\main\res\mipmap-anydpi-v26 | Out-Null
-          New-Item -ItemType Directory -Force app\src\main\res\mipmap-hdpi | Out-Null
           New-Item -ItemType Directory -Force app\src\main\res\mipmap-mdpi | Out-Null
+          New-Item -ItemType Directory -Force app\src\main\res\mipmap-hdpi | Out-Null
           New-Item -ItemType Directory -Force app\src\main\res\mipmap-xhdpi | Out-Null
           New-Item -ItemType Directory -Force app\src\main\res\mipmap-xxhdpi | Out-Null
           New-Item -ItemType Directory -Force app\src\main\res\mipmap-xxxhdpi | Out-Null
@@ -51,6 +51,7 @@ jobs:
             id "com.android.application" version "8.4.2"
             id "org.jetbrains.kotlin.android" version "1.9.24"
           }
+
           android {
             namespace "com.zizu.app"
             compileSdk 34
@@ -97,6 +98,7 @@ jobs:
           @'
           <?xml version="1.0" encoding="utf-8"?>
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
             <uses-permission android:name="android.permission.INTERNET"/>
             <uses-permission android:name="android.permission.RECORD_AUDIO"/>
 
@@ -144,8 +146,8 @@ jobs:
 
                   web.webChromeClient = WebChromeClient()
 
-                  // Buraya backend URL'ini koyarsın.
-                  // Şimdilik placeholder bırakalım ki build çıksın:
+                  // Buraya kendi backend URL'ini koyacaksın.
+                  // Şu an placeholder, sadece build çıksın diye:
                   web.loadUrl("https://example.com/")
               }
           }
@@ -165,9 +167,10 @@ jobs:
               android:layout_height="match_parent" />
           '@ | Set-Content -Encoding UTF8 app\src\main\res\layout\activity_main.xml
 
-          @' # keep rules '@ | Set-Content -Encoding UTF8 app\proguard-rules.pro
+          @'
+          # keep rules
+          '@ | Set-Content -Encoding UTF8 app\proguard-rules.pro
 
-          # Basit ikon XML'leri (ic_launcher ve ic_launcher_round)
           @'
           <?xml version="1.0" encoding="utf-8"?>
           <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
@@ -184,13 +187,12 @@ jobs:
           </adaptive-icon>
           '@ | Set-Content -Encoding UTF8 app\src\main\res\mipmap-anydpi-v26\ic_launcher_round.xml
 
-          # Boş PNG placeholderları (Gradle sadece dosya var mı diye bakıyor, gerçek ikon olmasa da olur)
-          # 1x1 byte'lık minimal PNG'leri base64 olarak yazıyoruz:
+          # sahte ikon PNG'lerini oluştur
           $pngBase64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII="
-          [IO.File]::WriteAllBytes("app\src\main\res\mipmap-mdpi\ic_launcher.png", [Convert]::FromBase64String($pngBase64))
-          [IO.File]::WriteAllBytes("app\src\main\res\mipmap-hdpi\ic_launcher.png", [Convert]::FromBase64String($pngBase64))
-          [IO.File]::WriteAllBytes("app\src\main\res\mipmap-xhdpi\ic_launcher.png", [Convert]::FromBase64String($pngBase64))
-          [IO.File]::WriteAllBytes("app\src\main\res\mipmap-xxhdpi\ic_launcher.png", [Convert]::FromBase64String($pngBase64))
+          [IO.File]::WriteAllBytes("app\src\main\res\mipmap-mdpi\ic_launcher.png",    [Convert]::FromBase64String($pngBase64))
+          [IO.File]::WriteAllBytes("app\src\main\res\mipmap-hdpi\ic_launcher.png",    [Convert]::FromBase64String($pngBase64))
+          [IO.File]::WriteAllBytes("app\src\main\res\mipmap-xhdpi\ic_launcher.png",   [Convert]::FromBase64String($pngBase64))
+          [IO.File]::WriteAllBytes("app\src\main\res\mipmap-xxhdpi\ic_launcher.png",  [Convert]::FromBase64String($pngBase64))
           [IO.File]::WriteAllBytes("app\src\main\res\mipmap-xxxhdpi\ic_launcher.png", [Convert]::FromBase64String($pngBase64))
 
       - name: Install Gradle wrapper
