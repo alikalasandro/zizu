@@ -124,33 +124,33 @@ jobs:
           @'
           package com.zizu.app
 
-          import android.annotation.SuppressLint
-          import android.os.Bundle
-          import android.webkit.WebChromeClient
-          import android.webkit.WebSettings
-          import android.webkit.WebView
-          import androidx.activity.ComponentActivity
+import android.annotation.SuppressLint
+import android.os.Bundle
+import android.webkit.WebChromeClient
+import android.webkit.WebSettings
+import android.webkit.WebView
+import androidx.activity.ComponentActivity
 
-          class MainActivity : ComponentActivity() {
-              @SuppressLint("SetJavaScriptEnabled")
-              override fun onCreate(savedInstanceState: Bundle?) {
-                  super.onCreate(savedInstanceState)
+class MainActivity : ComponentActivity() {
+    @SuppressLint("SetJavaScriptEnabled")
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
 
-                  val web = WebView(this)
-                  setContentView(web)
+        val web = WebView(this)
+        setContentView(web)
 
-                  val ws: WebSettings = web.settings
-                  ws.javaScriptEnabled = true
-                  ws.mediaPlaybackRequiresUserGesture = false
-                  ws.domStorageEnabled = true
+        val ws: WebSettings = web.settings
+        ws.javaScriptEnabled = true
+        ws.mediaPlaybackRequiresUserGesture = false
+        ws.domStorageEnabled = true
 
-                  web.webChromeClient = WebChromeClient()
+        web.webChromeClient = WebChromeClient()
 
-                  // Buraya kendi backend URL'ini koyacaksın.
-                  // Şu an placeholder, sadece build çıksın diye:
-                  web.loadUrl("https://example.com/")
-              }
-          }
+        // 👇 Artık kendi GitHub sayfan açılacak
+        web.loadUrl("https://alikalasandro.github.io/zizi/")
+    }
+}
+
           '@ | Set-Content -Encoding UTF8 app\src\main\java\com\zizu\app\MainActivity.kt
 
           @'
