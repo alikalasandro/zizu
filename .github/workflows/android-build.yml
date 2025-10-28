@@ -19,10 +19,10 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Create minimal Android project
+      - name: Create Android project for Zizu
         shell: pwsh
         run: |
-          # klasörleri oluştur
+          # klasör yapısını oluştur
           New-Item -ItemType Directory -Force app\src\main\java\com\zizu\app | Out-Null
           New-Item -ItemType Directory -Force app\src\main\res\layout | Out-Null
           New-Item -ItemType Directory -Force app\src\main\res\values | Out-Null
@@ -34,18 +34,27 @@ jobs:
           New-Item -ItemType Directory -Force app\src\main\res\mipmap-xxhdpi | Out-Null
           New-Item -ItemType Directory -Force app\src\main\res\mipmap-xxxhdpi | Out-Null
 
+          # settings.gradle
           @'
           pluginManagement {
-            repositories { gradlePluginPortal(); google(); mavenCentral() }
+            repositories {
+              gradlePluginPortal()
+              google()
+              mavenCentral()
+            }
           }
           dependencyResolutionManagement {
             repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-            repositories { google(); mavenCentral() }
+            repositories {
+              google()
+              mavenCentral()
+            }
           }
           rootProject.name = "Zizu"
           include(":app")
           '@ | Set-Content -Encoding UTF8 settings.gradle
 
+          # app/build.gradle
           @'
           plugins {
             id "com.android.application" version "8.4.2"
@@ -69,12 +78,16 @@ jobs:
                 minifyEnabled false
                 proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
               }
+              debug {
+                debuggable true
+              }
             }
 
             compileOptions {
               sourceCompatibility JavaVersion.VERSION_17
               targetCompatibility JavaVersion.VERSION_17
             }
+
             kotlinOptions {
               jvmTarget = "17"
             }
@@ -89,12 +102,14 @@ jobs:
           }
           '@ | Set-Content -Encoding UTF8 app\build.gradle
 
+          # gradle.properties
           @'
           org.gradle.jvmargs=-Xmx2g -Dfile.encoding=UTF-8
           android.useAndroidX=true
           kotlin.code.style=official
           '@ | Set-Content -Encoding UTF8 gradle.properties
 
+          # AndroidManifest.xml
           @'
           <?xml version="1.0" encoding="utf-8"?>
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
@@ -112,8 +127,8 @@ jobs:
                 android:exported="true">
 
                 <intent-filter>
-                  <action android:name="android.intent.action.MAIN"/>
-                  <category android:name="android.intent.category.LAUNCHER"/>
+                  <action android:name="android.intent.action.MAIN" />
+                  <category android:name="android.intent.category.LAUNCHER" />
                 </intent-filter>
 
               </activity>
@@ -121,56 +136,61 @@ jobs:
           </manifest>
           '@ | Set-Content -Encoding UTF8 app\src\main\AndroidManifest.xml
 
+          # MainActivity.kt
           @'
           package com.zizu.app
 
-import android.annotation.SuppressLint
-import android.os.Bundle
-import android.webkit.WebChromeClient
-import android.webkit.WebSettings
-import android.webkit.WebView
-import androidx.activity.ComponentActivity
+          import android.annotation.SuppressLint
+          import android.os.Bundle
+          import android.webkit.WebChromeClient
+          import android.webkit.WebSettings
+          import android.webkit.WebView
+          import androidx.activity.ComponentActivity
 
-class MainActivity : ComponentActivity() {
-    @SuppressLint("SetJavaScriptEnabled")
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+          class MainActivity : ComponentActivity() {
+              @SuppressLint("SetJavaScriptEnabled")
+              override fun onCreate(savedInstanceState: Bundle?) {
+                  super.onCreate(savedInstanceState)
 
-        val web = WebView(this)
-        setContentView(web)
+                  val web = WebView(this)
+                  setContentView(web)
 
-        val ws: WebSettings = web.settings
-        ws.javaScriptEnabled = true
-        ws.mediaPlaybackRequiresUserGesture = false
-        ws.domStorageEnabled = true
+                  val ws: WebSettings = web.settings
+                  ws.javaScriptEnabled = true
+                  ws.mediaPlaybackRequiresUserGesture = false
+                  ws.domStorageEnabled = true
 
-        web.webChromeClient = WebChromeClient()
+                  web.webChromeClient = WebChromeClient()
 
-        // 👇 Artık kendi GitHub sayfan açılacak
-        web.loadUrl("https://alikalasandro.github.io/zizi/")
-    }
-}
-
+                  // Senin yayınlanan sayfan:
+                  web.loadUrl("https://alikalasandro.github.io/zizi/")
+              }
+          }
           '@ | Set-Content -Encoding UTF8 app\src\main\java\com\zizu\app\MainActivity.kt
 
-          @'
-          <?xml version="1.0" encoding="utf-8"?>
-          <resources>
-            <string name="app_name">Zizu</string>
-          </resources>
-          '@ | Set-Content -Encoding UTF8 app\src\main\res\values\strings.xml
-
+          # activity_main.xml
           @'
           <?xml version="1.0" encoding="utf-8"?>
           <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
               android:layout_width="match_parent"
-              android:layout_height="match_parent" />
+              android:layout_height="match_parent"
+              android:orientation="vertical"/>
           '@ | Set-Content -Encoding UTF8 app\src\main\res\layout\activity_main.xml
 
+          # strings.xml
           @'
-          # keep rules
+          <?xml version="1.0" encoding="utf-8"?>
+          <resources>
+              <string name="app_name">Zizu</string>
+          </resources>
+          '@ | Set-Content -Encoding UTF8 app\src\main\res\values\strings.xml
+
+          # proguard-rules.pro
+          @'
+          # keep rules (şimdilik boş)
           '@ | Set-Content -Encoding UTF8 app\proguard-rules.pro
 
+          # adaptive icon XML (ic_launcher)
           @'
           <?xml version="1.0" encoding="utf-8"?>
           <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
@@ -179,6 +199,7 @@ class MainActivity : ComponentActivity() {
           </adaptive-icon>
           '@ | Set-Content -Encoding UTF8 app\src\main\res\mipmap-anydpi-v26\ic_launcher.xml
 
+          # adaptive icon round
           @'
           <?xml version="1.0" encoding="utf-8"?>
           <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
@@ -187,7 +208,7 @@ class MainActivity : ComponentActivity() {
           </adaptive-icon>
           '@ | Set-Content -Encoding UTF8 app\src\main\res\mipmap-anydpi-v26\ic_launcher_round.xml
 
-          # sahte ikon PNG'lerini oluştur
+          # boş png icon (hepsine aynı küçük placeholder)
           $pngBase64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII="
           [IO.File]::WriteAllBytes("app\src\main\res\mipmap-mdpi\ic_launcher.png",    [Convert]::FromBase64String($pngBase64))
           [IO.File]::WriteAllBytes("app\src\main\res\mipmap-hdpi\ic_launcher.png",    [Convert]::FromBase64String($pngBase64))
